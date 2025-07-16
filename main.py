@@ -105,6 +105,18 @@ def load_commodity_dimension(df):
     else:
         print("✓ No new commodity records needed")
 
+def load_market_type_dimension(df):
+    print("Loading market type dimension...")
+    types = df[['pricetype']].drop_duplicates().rename(columns={'pricetype': 'market_type'})
+
+    existing = pd.read_sql("SELECT market_type FROM dim_market_type", engine)
+    new_types = types[~types['market_type'].isin(existing['market_type'])]
+
+    if not new_types.empty:
+        new_types.to_sql('dim_market_type', engine, if_exists='append', index=False)
+        print(f"✓ Inserted {len(new_types)} new market types")
+    else:
+        print("✓ No new market types needed")
 
 # Run the process
 if __name__ == "__main__":
