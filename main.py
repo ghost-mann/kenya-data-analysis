@@ -89,6 +89,21 @@ def load_location_dimension(df):
     else:
         print("✓ No new location records needed")
 
+def load_commodity_dimension(df):
+    print("Loading commodity dimension...")
+    commodity_cols = ['category', 'commodity', 'unit']
+    commodities = df[commodity_cols].drop_duplicates()
+    commodities.rename(columns={'commodity': 'commodity_name'}, inplace=True)
+
+    existing = pd.read_sql("SELECT category, commodity_name, unit FROM dim_commodity", engine)
+    new_commodities = commodities.merge(existing, on=['category', 'commodity_name', 'unit'], how='left', indicator=True)
+    new_commodities = new_commodities[new_commodities['_merge'] == 'left_only'].drop('_merge', axis=1)
+
+    if not new_commodities.empty:
+        new_commodities.to_sql('dim_commodity', engine, if_exists='append', index=False)
+        print(f"✓ Inserted {len(new_commodities)} new commodity records")
+    else:
+        print("✓ No new commodity records needed")
 
 
 # Run the process
@@ -97,7 +112,7 @@ if __name__ == "__main__":
         df = extraction_and_transformation() # captures df returned by function
         load_dimensions(df)
         load_location_dimension(df)
-        # test_data()
+        load_commodity_dimension(df)
         print("\n🎉 Data loaded successfully into PostgreSQL!")
         
     except Exception as e:
