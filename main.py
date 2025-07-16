@@ -2,6 +2,7 @@ import pandas as pd
 import knoema
 import os
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
 # load .env file
 load_dotenv()
@@ -12,6 +13,10 @@ db_name = os.getenv("DB_NAME")
 db_user = os.getenv("DB_USER")
 db_password = os.getenv("DB_PASSWORD")
 db_port = os.getenv("DB_PORT")
+
+# db connection string 
+conn_string = f'postgresql://{db_user}:{db_password}@{db_host}/{db_name}'
+engine = create_engine(conn_string)
 
 # extraction
 df = pd.read_csv('wfp_food_prices_ken.csv')
