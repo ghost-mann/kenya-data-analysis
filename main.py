@@ -17,27 +17,25 @@ db_port = os.getenv("DB_PORT")
 # db connection string 
 conn_string = f'postgresql://{db_user}:{db_password}@{db_host}/{db_name}'
 engine = create_engine(conn_string)
+def extraction_and_transformation():
+    # extraction
+    df = pd.read_csv('wfp_food_prices_ken.csv')
 
-# extraction
-df = pd.read_csv('wfp_food_prices_ken.csv')
+    # knoema_data = knoema.get('zpkquzb', **{'Product': 'P14;P15',
+    # 	'Product Class': 'C4'})
+    # df_knoema = pd.DataFrame(knoema_data)
 
-# knoema_data = knoema.get('zpkquzb', **{'Product': 'P14;P15',
-# 	'Product Class': 'C4'})
+    # transformation
+    # drop rows with null values
+    df = df.dropna()
 
-# df_knoema = pd.DataFrame(knoema_data)
+    # remove whitespace from column names
+    df.columns = df.columns.str.strip()
 
+    # remove duplicate rows
+    df.drop_duplicates(inplace=True)
 
-# transformation
-# drop rows with null values
-df = df.dropna()
+    # reset index
+    df.reset_index(drop=True, inplace=True)
 
-# remove whitespace from column names
-df.columns = df.columns.str.strip()
-
-# remove duplicate rows
-df.drop_duplicates(inplace=True)
-
-# reset index
-df.reset_index(drop=True, inplace=True)
-
-print(df.head())
+    print(df.head())
