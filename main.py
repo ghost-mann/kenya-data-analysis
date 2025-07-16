@@ -67,11 +67,28 @@ def load_dimensions(df):
             new_dates[['date_value', 'year', 'month', 'day']].to_sql(
                 'dim_date', engine, if_exists='append', index=False
             )
-            print(f"  ✓ Inserted {len(new_dates)} new date records")
+            print(f"Inserted {len(new_dates)} new date records")
         except Exception as e:
             print(f"  ⚠ Error inserting new dates: {e}")
     else:
-        print("  ✓ No new dates to insert")
+        print("No new dates to insert")
+
+def load_location_dimension(df):
+    print("Loading location dimension...")
+    df['region'] = 'Kenya'  # Assuming your dataset is Kenya-only
+    location_cols = ['region', 'admin1', 'admin2', 'market']
+    locations = df[location_cols].drop_duplicates()
+
+    existing = pd.read_sql("SELECT region, admin1, admin2, market FROM dim_location", engine)
+    new_locations = locations.merge(existing, on=location_cols, how='left', indicator=True)
+    new_locations = new_locations[new_locations['_merge'] == 'left_only'].drop('_merge', axis=1)
+
+    if not new_locations.empty:
+        new_locations.to_sql('dim_location', engine, if_exists='append', index=False)
+        print(f"✓ Inserted {len(new_locations)} new location records")
+    else:
+        print("✓ No new location records needed")
+
 
 
 # Run the process
@@ -79,14 +96,9 @@ if __name__ == "__main__":
     try:
         df = extraction_and_transformation() # captures df returned by function
         load_dimensions(df)
-        # load_fact_table()
+        load_location_dimension(df)
         # test_data()
         print("\n🎉 Data loaded successfully into PostgreSQL!")
         
     except Exception as e:
-        print(f"\n❌ Error: {e}")
-        print("\nMake sure to:")
-        print("1. Update database credentials")
-        print("2. Check that tables exist")
-        print("3. Verify column names match your CSV")
-        print("4. Install required packages: pip install pandas psycopg2-binary sqlalchemy")
+        print(f"\n Error: {e}")
