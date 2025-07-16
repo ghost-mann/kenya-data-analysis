@@ -1,16 +1,26 @@
 import pandas as pd
+import knoema
 
-kenya_df = pd.read_csv('/home/austin/vscodeProjects/kenya-data-analysis/API_KEN_DS2_en_csv_v2_30096/API_KEN_DS2_en_csv_v2_30096.csv',skiprows=4
-                       )
+# extraction
+df = pd.read_csv('wfp_food_prices_ken.csv')
 
-keywords = ['food', 'inflation', 'consumer price', 'cpi', 'price index']
+# knoema_data = knoema.get('zpkquzb', **{'Product': 'P14;P15',
+# 	'Product Class': 'C4'})
 
-# filtering step - by indicator 
-filtered_df = kenya_df[kenya_df['Indicator Name'].str.contains('|'.join(keywords), case=False, na=False)]
+# df_knoema = pd.DataFrame(knoema_data)
 
-# column selection
-filtered_df = filtered_df[['Indicator Name', '2000', '2023']]
 
-print(filtered_df)
+# transformation
+# drop rows with null values
+df = df.dropna()
 
-print(f"Filtered indicators count: {len(filtered_df)}")
+# remove whitespace from column names
+df.columns = df.columns.str.strip()
+
+# remove duplicate rows
+df.drop_duplicates(inplace=True)
+
+# reset index
+df.reset_index(drop=True, inplace=True)
+
+print(df.head())
