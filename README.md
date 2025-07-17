@@ -80,3 +80,5 @@ Creates a "flat" table that looks like your original CSV but is stored efficient
 Now instead of writing complex JOINs, you can simply:
 sqlSELECT * FROM food_prices_view WHERE region = 'North Eastern';
 SELECT commodity_name, AVG(price_kes) FROM food_prices_view GROUP BY commodity_name;
+
+https://claude.ai/public/artifacts/4694eccb-582a-408e-8f21-410b827d6202

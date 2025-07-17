@@ -22,16 +22,15 @@ def extraction_and_transformation():
     # extraction
     df = pd.read_csv('wfp_food_prices_ken.csv', skiprows=[1])
 
-    # knoema_data = knoema.get('zpkquzb', **{'Product': 'P14;P15',
-    # 	'Product Class': 'C4'})
-    # df_knoema = pd.DataFrame(knoema_data)
-
-    # transformation
     # drop rows with null values
     df = df.dropna()
 
     # remove whitespace from column names
     df.columns = df.columns.str.strip()
+
+    # remove " Kenya" from commodity column if present
+    if 'commodity' in df.columns:
+        df['commodity'] = df['commodity'].str.replace(r'\s*Kenya\s*', '', regex=True).str.strip()
 
     # remove duplicate rows
     df.drop_duplicates(inplace=True)
@@ -39,8 +38,9 @@ def extraction_and_transformation():
     # reset index
     df.reset_index(drop=True, inplace=True)
 
-    print(df)
+    print(df.head())
     return df
+
 
 # loading the dimension tables
 
@@ -75,7 +75,9 @@ def load_dimensions(df):
 
 def load_location_dimension(df):
     print("Loading location dimension...")
-    df['region'] = 'Kenya'  # Assuming your dataset is Kenya-only
+    
+    df['region'] = df['admin1'].str.strip()
+    
     location_cols = ['region', 'admin1', 'admin2', 'market']
     locations = df[location_cols].drop_duplicates()
 
@@ -88,6 +90,7 @@ def load_location_dimension(df):
         print(f"Inserted {len(new_locations)} new location records!")
     else:
         print("No new location records needed!")
+
 
 def load_commodity_dimension(df):
     print("Loading commodity dimension...")
@@ -129,7 +132,8 @@ def load_fact_table(df):
     fact_df['date_value'] = fact_df['date'].dt.date
     
     # Add region column for location dimension join
-    fact_df['region'] = 'Kenya'
+    fact_df['region'] = fact_df['admin1'].str.strip()
+
     
     # Rename columns to match schema
     fact_df = fact_df.rename(columns={
