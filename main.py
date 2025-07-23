@@ -1,5 +1,4 @@
 import pandas as pd
-import knoema
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
@@ -76,12 +75,10 @@ def load_dimensions(df):
 def load_location_dimension(df):
     print("Loading location dimension...")
     
-    df['region'] = df['admin1'].str.strip()
-    
-    location_cols = ['region', 'admin1', 'admin2', 'market']
+    location_cols = ['admin1', 'admin2', 'market']
     locations = df[location_cols].drop_duplicates()
 
-    existing = pd.read_sql("SELECT region, admin1, admin2, market FROM dim_location", engine)
+    existing = pd.read_sql("SELECT admin1, admin2, market FROM dim_location", engine)
     new_locations = locations.merge(existing, on=location_cols, how='left', indicator=True)
     new_locations = new_locations[new_locations['_merge'] == 'left_only'].drop('_merge', axis=1)
 
@@ -130,11 +127,7 @@ def load_fact_table(df):
     # Convert date to date format for joining
     fact_df['date'] = pd.to_datetime(fact_df['date'])
     fact_df['date_value'] = fact_df['date'].dt.date
-    
-    # Add region column for location dimension join
-    fact_df['region'] = fact_df['admin1'].str.strip()
-
-    
+        
     # Rename columns to match schema
     fact_df = fact_df.rename(columns={
         'commodity': 'commodity_name',
@@ -150,7 +143,7 @@ def load_fact_table(df):
     
     # Get location dimension IDs
     location_dim = pd.read_sql("""
-        SELECT location_id, region, admin1, admin2, market 
+        SELECT location_id,admin1, admin2, market 
         FROM dim_location
     """, engine)
     
@@ -186,7 +179,7 @@ def load_fact_table(df):
     # Join with location dimension
     fact_df = fact_df.merge(
         location_dim, 
-        on=['region', 'admin1', 'admin2', 'market'], 
+        on=['admin1', 'admin2', 'market'], 
         how='left'
     )
     print(f"After location join: {fact_df.shape}")
